@@ -5,18 +5,18 @@ import json
 import smtplib
 
 # video process configuration
-first_videoFile_starttime = "00:00:00"
-last_videoFile_stoptime = "00:00:00"
-ffmpeg_call = "X://ffmpeg/bin/ffmpeg.exe" # call ffmpeg on Windows
-digest_folder = "X://somewhere/" # put all original file here
-source_extension = "TOD"
-output_extension = "mpg"
-final_output_name = "output" # with extension output_extension
-output_quality = "1" # 1 = original better than 2 better than 3...
-output_volume = "9" # dB, "10" for +10 dB, "-10" for -10dB
-header_name = "header.jpg"
-trailer_name = "trailer.jpg"
-headertrailer_durations = "5" # output's header or trailer duration in seconds
+first_videoFile_starttime = '00:00:00'
+last_videoFile_stoptime = '00:00:00'
+ffmpeg_call = 'X://ffmpeg/bin/ffmpeg.exe' # call ffmpeg on Windows
+digest_folder = 'X://somewhere/' # put all original file here
+source_extension = 'TOD'
+output_extension = 'mpg'
+final_output_name = 'output' # with extension output_extension
+output_quality = '1' # 1 = original better than 2 better than 3...
+output_volume = '9' # dB, "10" for +10 dB, "-10" for -10dB
+header_name = 'header.jpg'
+trailer_name = 'trailer.jpg'
+headertrailer_durations = '5' # output's header or trailer duration in seconds
 
 # youtube account info
 client_id = ''
@@ -30,7 +30,10 @@ email_content = 'Something details'
 smtp_host = 'smtp.gmail.com:587'
 smtp_username = 'username'
 smtp_password = 'password'
-    
+
+# shutdown option
+shutdown_buffer = '-1'
+
 # files summary view
 def summary():
     print '死懶鬼！搵緊檔案喇。。。' # "welcome! searching files..."
@@ -150,11 +153,11 @@ def sendEmail():
     
 #program sequence
 def start():
-    global first_videoFile_starttime, last_videoFile_stoptime, output_volume
-    usage = "用法： main.py -s [start_time] -e [end_time] -d [db]" # usage: main.py -s [start_time] -e [end_time] -d [db]
-    if len(sys.argv) == 7:
+    global first_videoFile_starttime, last_videoFile_stoptime, output_volume, shutdown_buffer
+    usage = "用法： main.py -s [start_time] -e [end_time] -d [db] -h [buffer_time_before_halt]" # usage: main.py -s [start_time] -e [end_time] -d [db] -h [buffer_time_before_halt]
+    if len(sys.argv) == 9:
         try:
-            opts, args = getopt.getopt(sys.argv[1:], "s:e:d:", ["start=", "end=", "db="])
+            opts, args = getopt.getopt(sys.argv[1:], "s:e:d:h:", ["start=", "end=", "db=", "halt="])
         except getopt.GetoptError as err:
             print usage
             sys.stdout.flush()
@@ -166,6 +169,8 @@ def start():
                 last_videoFile_stoptime = a
             elif o in ("-d", "--db"):
                 output_volume = a
+            elif o in ("-h", "--halt"):
+                shutdown_buffer = a
             else:
                 print usage
                 sys.stdout.flush()
@@ -185,4 +190,6 @@ def start():
 
 #start program
 start()
+if int(shutdown_buffer) > 0: # shutdown machine if argument defined
+    sp.call(["shutdown.exe", "-f", "-s", "-t", shutdown_buffer])
 sys.exit()
