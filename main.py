@@ -17,6 +17,10 @@ header_name = "header.jpg"
 trailer_name = "trailer.jpg"
 headertrailer_durations = "5" # output's header or trailer duration in seconds
 
+# youtube account info
+client_id = ''
+client_secret = ''
+
 # notify email configuration
 email_fromaddr = 'to@someone.com'
 email_toaddrs  = 'from@someone.com'
@@ -112,6 +116,20 @@ def combine(handled_list):
         os.remove("trailer.mpg")
     print 'YEAH!!! 完成！！！ 再見喇死懶鬼' # ”Process completed, please go check, Goodbye!“
     sys.stdout.flush()
+    
+# create json configuration, prepare for connecting youtube api
+def youtubeJSON(client_id, client_secret)
+    data = {
+        "web": {
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "redirect_uris": [],
+            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+            "token_uri": "https://accounts.google.com/o/oauth2/token"
+        }
+    }
+    data['key'] = 'value'
+    json_data = json.dumps(data)
 
 # send notification email
 def sendEmail():
@@ -158,6 +176,7 @@ def start():
     os.chdir(digest_folder) #go to target working directory
     if summary() > 0:
         combine(transcode())
+        youtubeJSON(client_id, client_secret)
         sendEmail()
     else:
         print '無檔案搵到。。。係咪玩野呀！！！再見' # "no files found, end"
