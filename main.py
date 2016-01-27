@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import os, sys
 import subprocess as sp
+import smtplib
 
+# video process configuration
 ffmpeg_call = "X://ffmpeg/bin/ffmpeg.exe" # call ffmpeg on Windows
 digest_folder = "X://somewhere/" # put all original file here
 source_extension = "TOD"
@@ -13,6 +15,15 @@ header_name = "header.jpg"
 trailer_name = "trailer.jpg"
 headertrailer_durations = "5" # output's header or trailer duration in seconds
 
+# notify email configuration
+email_fromaddr = 'to@someone.com'
+email_toaddrs  = 'from@someone.com'
+email_subject = 'Something finished'
+email_content = 'Something details'
+smtp_host = 'smtp.gmail.com:587'
+smtp_username = 'username'
+smtp_password = 'password'
+    
 # files summary view
 def summary():
     print '死懶鬼！搵緊檔案喇。。。' # "welcome! searching files..."
@@ -94,11 +105,28 @@ def combine(handled_list):
     print 'YEAH!!! 完成！！！ 再見喇死懶鬼' # ”Process completed, please go check, Goodbye!“
     sys.stdout.flush()
 
+# send notification email
+def sendEmail():
+    full_msg = "\r\n".join([
+    "From: " + email_fromaddr,
+    "To: " + email_toaddrs,
+    "Subject: " + email_subject,
+    "",
+    email_content
+    ])
+    server = smtplib.SMTP(smtp_host)
+    server.ehlo()
+    server.starttls()
+    server.login(smtp_username,smtp_password)
+    server.sendmail(email_fromaddr, email_toaddrs, full_msg)
+    server.quit()
+    
 #program sequence
 def start():
     os.chdir(digest_folder) #go to target working directory
     if summary() > 0:
         combine(transcode())
+        sendEmail()
     else:
         print '無檔案搵到。。。係咪玩野呀！！！再見' # "no files found, end"
         sys.stdout.flush()
