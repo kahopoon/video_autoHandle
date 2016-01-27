@@ -129,8 +129,8 @@ def youtubeJSON(client_id, client_secret)
             "token_uri": "https://accounts.google.com/o/oauth2/token"
         }
     }
-    data['key'] = 'value'
-    json_data = json.dumps(data)
+    with open('client_secrets.json', 'w') as f:
+        json.dump(data, f)
 
 # send notification email
 def sendEmail():
