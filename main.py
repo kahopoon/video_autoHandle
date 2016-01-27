@@ -4,6 +4,8 @@ import subprocess as sp
 import smtplib
 
 # video process configuration
+first_videoFile_starttime = "00:00:00"
+last_videoFile_stoptime = "00:00:00"
 ffmpeg_call = "X://ffmpeg/bin/ffmpeg.exe" # call ffmpeg on Windows
 digest_folder = "X://somewhere/" # put all original file here
 source_extension = "TOD"
@@ -47,9 +49,15 @@ def transcode():
     handled_list = []
     for file in os.listdir(digest_folder):
         if file.endswith(source_extension):
-            print file + ' 轉緊去 ' + output_extension + '。。。' # "converting into..."
-            sys.stdout.flush()
             tranform_format = [ffmpeg_call, '-i', file, '-qscale:v', output_quality, '-af', ('volume=' + output_volume + 'dB'), '-deinterlace', (file[0:-3] + output_extension)]
+            print file + ' 轉緊去 ' + output_extension + '。。。' # "converting into..."
+            if file == os.listdir(digest_folder)[0]:
+                tranform_format.insert(3, first_videoFile_starttime)
+                print '開始檔案，由 ' + first_videoFile_starttime + ' 開始' # start video, start time from...
+            elif file == os.listdir(digest_folder)[-1]:
+                tranform_format.insert(8, last_videoFile_stoptime)
+                print '結尾檔案，到 ' + first_videoFile_endtime + ' 終結' # end video, end time til...
+            sys.stdout.flush()
             sp.call(tranform_format)
             os.remove(file)
             handled_list.append(file[0:-3] + output_extension)
@@ -123,6 +131,30 @@ def sendEmail():
     
 #program sequence
 def start():
+    global first_videoFile_starttime, last_videoFile_stoptime, output_volume
+    usage = "用法： main.py -s [start_time] -e [end_time] -d [db]" # usage: main.py -s [start_time] -e [end_time] -d [db]
+    if len(sys.argv) == 7:
+        try:
+            opts, args = getopt.getopt(sys.argv[1:], "s:e:d:", ["start=", "end=", "db="])
+        except getopt.GetoptError as err:
+            print usage
+            sys.stdout.flush()
+            sys.exit()
+        for o, a in opts:
+            if o in ("-s", "--start"):
+                first_videoFile_starttime = a
+            elif o in ("-e", "--end"):
+                last_videoFile_stoptime = a
+            elif o in ("-d", "--db"):
+                output_volume = a
+            else:
+                print usage
+                sys.stdout.flush()
+                sys.exit()
+    else:
+        print usage
+        sys.stdout.flush()
+        sys.exit()
     os.chdir(digest_folder) #go to target working directory
     if summary() > 0:
         combine(transcode())
@@ -133,3 +165,4 @@ def start():
 
 #start program
 start()
+sys.exit()
