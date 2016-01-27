@@ -42,7 +42,7 @@ def summary():
 def transcode():
     if int(output_volume) > 0:
         print '哇！啲片咁細聲，全部加大 ' + output_volume + ' dB！' # tell increase dB to all files
-    if int(output_volume) < 0:
+    elif int(output_volume) < 0:
         print '哇！啲片咁細聲，全部減低 ' + output_volume + ' dB！' # tell decrease dB to all files
     handled_list = []
     for file in os.listdir(digest_folder):
@@ -71,7 +71,7 @@ def header_trailer(seconds):
             status += 1
             print '搞掂，頭LOGO已做。' # "header made"
             sys.stdout.flush()
-        if file == trailer_name:
+        elif file == trailer_name:
             print '睇黎你要加個尾LOGO，等陣。。。' # "trailer needed"
             sys.stdout.flush()
             trailer_add = [ffmpeg_call, '-loop', '1', '-i', trailer_name, '-t', seconds, '-pix_fmt', 'yuv420p', ('trailer.' + output_extension)]
@@ -87,9 +87,9 @@ def combine(handled_list):
     status = header_trailer(headertrailer_durations)
     if status == 1:
         concat_files = 'header.mpg|' + concat_files
-    if status == 2:
+    elif status == 2:
         concat_files += '|trailer.mpg'
-    if status == 3:
+    elif status == 3:
         concat_files = 'header.mpg|' + concat_files + '|trailer.mpg'
     concat_command = [ffmpeg_call, '-i', ("concat:" + concat_files), '-c', 'copy', (final_output_name + '.' + output_extension)]
     print '全部檔案合併緊做一個，等陣啦。。。' # "Combining all files into one..."
@@ -97,9 +97,9 @@ def combine(handled_list):
     sp.call(concat_command)
     if status == 1:
         os.remove("header.mpg")
-    if status == 2:
+    elif status == 2:
         os.remove("trailer.mpg")
-    if status == 3:
+    elif status == 3:
         os.remove("header.mpg")
         os.remove("trailer.mpg")
     print 'YEAH!!! 完成！！！ 再見喇死懶鬼' # ”Process completed, please go check, Goodbye!“
