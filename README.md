@@ -1,6 +1,8 @@
 # video_autoHandle
 Put all "A" kind format video files, convert all to "B" kind format with trimming audio volume, detect if header or trailer footage is/are needed, and combine (concatenate) all files into one file in "B" kind format. Upload that to youtube, send email with youtube link when finished.
 
+Useful when some old recording devices only support old file system and create many continuous files during records. Or some devices having files extension that even Adobe Premiere can not import into. And convenient to add header or trailer on video file. With auto process and upload and notification, you may leave your desk on some standard video cutting works.
+
 # Prerequisite
 This script is designed for Windows platform, you have to change command pattern if you would like to run it on Linux.
 
