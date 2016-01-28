@@ -15,11 +15,18 @@ https://developers.google.com/youtube/v3/guides/uploading_a_video
 
 # Usage
 python main.py -s [start_time] -e [end_time] -d [dB] -h [seconds_shutdown]
+
 start_time: first video file 's time stamp to start
+
 end_time: last video file's time stamp to end
+
 dB: increase of decrease volume in dB
+
 seconds_shutdown: shutdown machine in specific seconds after end of script
 
 # Example
 python main.py -s 00:00:30 -e 00:10:00 -d 6 -h 60
-Command state the output video file will be start at 30 second from the first video file and end with last video file's 10 minutes. Output will be gain 6dB and shutdown machine on after 60 seconds of finished script
+
+Command state the output video file will be start at 30 second from the first video file and end with last video file's 10 minutes.
+
+Output will be gain 6dB and shutdown machine on after 60 seconds of finished script
