@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
-import os, sys
+import os, sys, getopt, re
 import subprocess as sp
-import json
-import smtplib
+import json, smtplib
 
 # video process configuration
 first_videoFile_starttime = '00:00:00'
 last_videoFile_stoptime = '00:00:00'
+scripts_path = 'X://path_of_scripts/' # path of this script, upload_video.py and json places
 ffmpeg_call = 'X://ffmpeg/bin/ffmpeg.exe' # call ffmpeg on Windows
-digest_folder = 'X://somewhere/' # put all original file here
+digest_folder = 'X://path_of_source_video_files/' # put all original file here
 source_extension = 'TOD'
 output_extension = 'mpg'
 final_output_name = 'output' # with extension output_extension
@@ -18,18 +18,19 @@ header_name = 'header.jpg'
 trailer_name = 'trailer.jpg'
 headertrailer_durations = '5' # output's header or trailer duration in seconds
 
-# youtube account info
-client_id = ''
-client_secret = ''
+# youtube developer console OAuth info
+client_id = 'OAuth_client_id_here'
+client_secret = 'OAuth_secret_id_here'
+uploaded_videoID = None
 
 # notify email configuration
-email_fromaddr = 'to@someone.com'
-email_toaddrs  = 'from@someone.com'
-email_subject = 'Something finished'
-email_content = 'Something details'
-smtp_host = 'smtp.gmail.com:587'
-smtp_username = 'username'
-smtp_password = 'password'
+email_fromaddr = 'from@someone.com'
+email_toaddrs  = 'to@someone.com'
+email_subject = 'Video has been uploaded to Youtube'
+email_content = ''
+smtp_host = 'smtp_host_address_here'
+smtp_username = 'username_here'
+smtp_password = 'password_here'
 
 # shutdown option
 shutdown_buffer = '-1'
@@ -38,39 +39,40 @@ shutdown_buffer = '-1'
 def summary():
     print '死懶鬼！搵緊檔案喇。。。' # "welcome! searching files..."
     sys.stdout.flush()
-    count = 0
+    found_files = []
     for file in os.listdir(digest_folder):
         if file.endswith(source_extension):
+            found_files.append(file)
             print '搵到 ' + file + ' ！' # "found!"
             sys.stdout.flush()
-            count += 1
-    print '夾埋搵到 ' + str(count) + ' 個 ' + source_extension + ' 檔案。' # "total files found."
+    print '夾埋搵到 ' + str(len(found_files)) + ' 個 ' + source_extension + ' 檔案。' # "total files found."
     sys.stdout.flush()
-    return count
+    return found_files
     
 # digest all original file, convert into output_extension format, delete the original one
-def transcode():
+def transcode(found_list):
     if int(output_volume) > 0:
         print '哇！啲片咁細聲，全部加大 ' + output_volume + ' dB！' # tell increase dB to all files
     elif int(output_volume) < 0:
         print '哇！啲片咁細聲，全部減低 ' + output_volume + ' dB！' # tell decrease dB to all files
     handled_list = []
-    for file in os.listdir(digest_folder):
-        if file.endswith(source_extension):
-            tranform_format = [ffmpeg_call, '-i', file, '-qscale:v', output_quality, '-af', ('volume=' + output_volume + 'dB'), '-deinterlace', (file[0:-3] + output_extension)]
-            print file + ' 轉緊去 ' + output_extension + '。。。' # "converting into..."
-            if file == os.listdir(digest_folder)[0]:
-                tranform_format.insert(3, first_videoFile_starttime)
-                print '開始檔案，由 ' + first_videoFile_starttime + ' 開始' # start video, start time from...
-            elif file == os.listdir(digest_folder)[-1]:
-                tranform_format.insert(8, last_videoFile_stoptime)
-                print '結尾檔案，到 ' + first_videoFile_endtime + ' 終結' # end video, end time til...
-            sys.stdout.flush()
-            sp.call(tranform_format)
-            os.remove(file)
-            handled_list.append(file[0:-3] + output_extension)
-            print file + ' 轉左去 ' + output_extension + ' 喇！' # "converted"
-            sys.stdout.flush()
+    for file in found_list:
+        tranform_format = [ffmpeg_call, '-i', file, '-qscale:v', output_quality, '-af', ('volume=' + output_volume + 'dB'), '-deinterlace', (file[0:-3] + output_extension)]
+        print file + ' 轉緊去 ' + output_extension + '。。。' # "converting into..."
+        if file == found_list[0]:
+            tranform_format.insert(3, '-ss')
+            tranform_format.insert(4, first_videoFile_starttime)
+            print '開始檔案，由 ' + first_videoFile_starttime + ' 開始' # start video, start time from...
+        elif file == found_list[-1]:
+            tranform_format.insert(8, '-t')
+            tranform_format.insert(9, last_videoFile_stoptime)
+            print '結尾檔案，到 ' + last_videoFile_stoptime + ' 終結' # end video, end time til...
+        sys.stdout.flush()
+        sp.call(tranform_format)
+        os.remove(file)
+        handled_list.append(file[0:-3] + output_extension)
+        print file + ' 轉左去 ' + output_extension + ' 喇！' # "converted"
+        sys.stdout.flush()
     print '搵到嘅 ' + source_extension + ' 都轉曬。' # "all found files have been converted"
     sys.stdout.flush()
     return handled_list
@@ -122,7 +124,7 @@ def combine(handled_list):
     sys.stdout.flush()
     
 # create json configuration, prepare for connecting youtube api
-def youtubeJSON(client_id, client_secret)
+def youtubeJSON(client_id, client_secret):
     data = {
         "web": {
             "client_id": client_id,
@@ -134,9 +136,30 @@ def youtubeJSON(client_id, client_secret)
     }
     with open('client_secrets.json', 'w') as f:
         json.dump(data, f)
+    print '已輸出Youtube認證JSON，可以上載喇。。。' # Youtube api configuration json generated, ready for upload.
+    sys.stdout.flush()
+    return True
 
+# video upload to youtube through google api
+def youtubeUpload():
+    global uploaded_videoID
+    if youtubeJSON(client_id, client_secret):
+        file_path = '--file=' + final_output_name + '.' + output_extension
+        upload_command = ['python.exe', (scripts_path + 'upload_video.py'), file_path, '--title=Machine Auto Upload', '--privacyStatus=private']
+        return_status = sp.check_output(upload_command)
+        find_videoID = re.search("Video id '" + "(.+?)" + "' was successfully uploaded.", return_status)
+        uploaded_videoID = find_videoID.group(1)
+        os.remove('client_secrets.json')
+        print '上載片段至Youtube完成！！ (https://youtu.be/' + uploaded_videoID + ')' # upload job finished.
+        sys.stdout.flush()
+    
 # send notification email
 def sendEmail():
+    global email_content
+    if uploaded_videoID != None:
+        email_content = 'Video has been uploaded to https://youtu.be/' + uploaded_videoID
+    else:
+        email_content = 'Video failed to upload.'
     full_msg = "\r\n".join([
     "From: " + email_fromaddr,
     "To: " + email_toaddrs,
@@ -180,9 +203,10 @@ def start():
         sys.stdout.flush()
         sys.exit()
     os.chdir(digest_folder) #go to target working directory
-    if summary() > 0:
-        combine(transcode())
-        youtubeJSON(client_id, client_secret)
+    found_list = summary()
+    if len(found_list) > 0:
+        combine(transcode(found_list))
+        youtubeUpload()
         sendEmail()
     else:
         print '無檔案搵到。。。係咪玩野呀！！！再見' # "no files found, end"
