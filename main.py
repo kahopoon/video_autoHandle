@@ -111,7 +111,7 @@ def combine(handled_list):
         concat_files += '|trailer.mpg'
     elif status == 3:
         concat_files = 'header.mpg|' + concat_files + '|trailer.mpg'
-    concat_command = [ffmpeg_call, '-i', ("concat:" + concat_files), '-c', 'copy', '-codec:v', output_codec, (final_output_name + '.' + output_extension)]
+    concat_command = [ffmpeg_call, '-i', ("concat:" + concat_files), '-c', 'copy', '-codec:v', output_codec, '-qscale:v', output_quality, (final_output_name + '.' + output_extension)]
     print_and_log('全部檔案合併緊做一個，等陣啦。。。') # "Combining all files into one..."
     sp.call(concat_command)
     if status == 1:
